@@ -1,4 +1,4 @@
-#Petsnake
+# Petsnake
 
 It's just a game of snake, but the difficulty is correlated to the real-time temperature in my living room. If you log on to play when its 86 degrees F in mmy living room, the game will move 
 much faster––and thus be much harder––than if you play when it is 64 degrees F in my living room.   
