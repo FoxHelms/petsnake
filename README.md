@@ -5,5 +5,5 @@ much faster––and thus be much harder––than if you play when it is 64 deg
 
 Real-time data is read through a Kafka consumer reading from a Kafka bootstrap running in a Docker container on a remote Linux server. The data is provided by a DHT11 sensor. 
 
-<img src="./imgs/snake_example.png" 
+<img src="./imgs/snake_example.png"> 
 Example frame, where the number shown is the current F Temperature. 
