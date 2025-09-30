@@ -15,25 +15,27 @@ TOPIC = "room.temp"
 BOOTSTRAP_SERVERS = [kafka_server + ":9092"]
 
 def kafka_consumer_thread(q):
-    consumer = KafkaConsumer(
-        TOPIC,
-        bootstrap_servers=BOOTSTRAP_SERVERS,
-        auto_offset_reset='latest',
-        value_deserializer=lambda m: json.loads(m.decode('utf-8')),
-        key_deserializer=lambda k: k.decode('utf-8') if k else None
-    )
-    print("Consumer started")
-    print(consumer.bootstrap_connected())
+    try:
+        consumer = KafkaConsumer(
+            TOPIC,
+            bootstrap_servers=BOOTSTRAP_SERVERS,
+            auto_offset_reset='latest',
+            value_deserializer=lambda m: json.loads(m.decode('utf-8')),
+            key_deserializer=lambda k: k.decode('utf-8') if k else None
+        )
     
-    for msg in consumer:
-        q.put(msg.value["temp_f"])
+        for msg in consumer:
+            q.put(msg.value["temp_f"])
+    except Exception as e:
+        print(f"Error reaching server: {e}")
+        q.put(70.00)
 
 def snake_game(q):
     # === CONFIG ===
     CELL_SIZE = 20
     GRID_WIDTH, GRID_HEIGHT = 30, 20
     SCREEN_WIDTH, SCREEN_HEIGHT = CELL_SIZE * GRID_WIDTH, CELL_SIZE * GRID_HEIGHT
-    FPS = 60
+    FPS = 15
 
     # === COLORS ===
     WHITE = (255, 255, 255)
@@ -85,14 +87,20 @@ def snake_game(q):
             return (1, 0)
         return current_dir
 
+    cached_temp = q.get()
+
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
 
-        currTemp = q.get()
-        text_surface = font.render(f"Sensor Output: {currTemp}", True, (255, 255, 255))
+        try:
+            cached_temp = q.get_nowait()
+        except queue.Empty:
+            pass  # No new data, just keep using the last known temp
+
+        text_surface = font.render(f"Sensor Output: {cached_temp:.2f}", True, (255, 255, 255))
         text_rect = text_surface.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
 
         direction = handle_input(direction)
@@ -121,7 +129,6 @@ def snake_game(q):
         draw_cell(food, RED)
         pygame.display.flip()
 
-        cached_temp = currTemp
         clock.tick(FPS)
 
 
@@ -133,13 +140,10 @@ def snake_game(q):
 
 if __name__ == "__main__":
     q = queue.Queue()
-    q.put(70.00)
     consumer_thread = threading.Thread(target=kafka_consumer_thread, args=(q,))
     consumer_thread.daemon = True
     consumer_thread.start()
     snake_game(q)
-
-    print("All threads closed")
     
 
         
