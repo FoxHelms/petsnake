@@ -7,3 +7,8 @@ Real-time data is read through a Kafka consumer reading from a Kafka bootstrap r
 
 <img src="./imgs/snake_example.png"> 
 Example frame, where the number shown is the current F Temperature. 
+
+## TODO
+[ ] create flask app container hosting game
+[ ] host app via VPS
+[ ] Research NoIP & ddns
